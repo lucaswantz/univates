@@ -5,13 +5,16 @@
 #include <unistd.h>
 #include <sys/param.h>
 
-float obterUsoDaCPUPeloProcesso(int pid, int tempoAtualizacao) {
+float getUsoProcessador(int pid) {
 	
     int vNULLI;
     char vNULLC[100];
     char nomeArquivo[100];
 	
     int pid_stat;
+	
+	// Segundos para o sistema atualizar
+    int tempoAtualizacao = 2; 
 	
     int timeUsuario;
     int timeKernel;
@@ -32,6 +35,8 @@ float obterUsoDaCPUPeloProcesso(int pid, int tempoAtualizacao) {
         // Soma total de time.
         timeTotal1 = (float)(timeUsuario + timeKernel);
     }
+	
+	// Segundos parado
     sleep(tempoAtualizacao);
 
     // Abre aquivo /proc/PID/stat.
@@ -43,12 +48,15 @@ float obterUsoDaCPUPeloProcesso(int pid, int tempoAtualizacao) {
         timeTotal2 = (float)(timeUsuario + timeKernel);
     }
 	
+	// porque usar o HZ
+	// https://stackoverflow.com/questions/2731463/converting-jiffies-to-milli-seconds
+	// Como o temp é jiffies, aqui ele ve quantos jiffies tem em X segundos multiplicando por HZ.
     percent_usage = (( (timeTotal2 - timeTotal1) / (HZ * tempoAtualizacao) ) * 100.00);
 
     return percent_usage;
 }
 
-int obtemMemoriaTotalProcesso(int pid)
+int getUsoMemoria(int pid)
 {
     int vNULLI;
     FILE* statm;
@@ -96,10 +104,9 @@ int GetRamInKB(void)
 int main (int argc, char *argv[])
 {
     int pid;
-    int tempo_atualizacao = 2;
-    int i = 0;
-
-    printf("ID |   PID   |  Mémoria  |   CPU    |\n");
+	int i = 0;
+	
+	printf("ID  -   PID   -  Mémoria  -   CPU    |\n");
     printf(" \n");
 
     pid = atoi(argv[1]);
@@ -110,7 +117,7 @@ int main (int argc, char *argv[])
         if (i < 10){
             printf("0");
         }
-        printf("%d |   %d  |    %d   %  |  %.1f   %  \n", i, pid, obtemMemoriaTotalProcesso(pid), obterUsoDaCPUPeloProcesso(pid, tempo_atualizacao));
+        printf("%d |   %d  |    %d   %  |  %.1f   %  \n", i, pid, getUsoMemoria(pid), getUsoProcessador(pid));
         i++;
     }
 }
